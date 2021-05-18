@@ -13,7 +13,7 @@ if __name__ == '__main__':
     df = pd.read_csv(DATA_FILENAME)
     if SPLIT_TEST_SIZE <= 0:
         df_train = df
-        df_test = pd.DataFrame(index=df.index, columns=df.columns)
+        df_test = pd.DataFrame(columns=df.columns)
     else:
         df_train, df_test = train_test_split(df, test_size=SPLIT_TEST_SIZE, random_state=SPLIT_RANDOM_STATE)
     df_train.to_csv(TRAIN_FILENAME, index=False)
