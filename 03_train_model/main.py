@@ -4,12 +4,12 @@ cur_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.chdir(cur_dir)
 sys.path.append(cur_dir)
 
-from config import PREPROCESS_RESULT_FILENAME, ID_COLUMN_NAME, TRAIN_MODELS, TRAIN_SCORING_METRIC, TRAIN_INNER_CV, TRAIN_WITH_FEATURE_SELECTION, TRAIN_WITH_FEATURE_SELECTION_EARLY_STOP, TRAIN_WITH_NCV, TRAIN_OUTER_CV, TRAIN_RESULT_FILENAME
+from config import PREPROCESS_RESULT_FILENAME, ID_COLUMN_NAME, TRAIN_MODELS, TRAIN_SCORING_METRIC, NCV_SCORING_METRICS, TRAIN_INNER_CV, TRAIN_WITH_FEATURE_SELECTION, TRAIN_WITH_FEATURE_SELECTION_EARLY_STOP, TRAIN_WITH_NCV, TRAIN_OUTER_CV, TRAIN_RESULT_FILENAME
 from utils.feature_selection import ForwardFeatureSelector
 
 import pandas as pd
 from sklearn.base import clone
-from sklearn.model_selection import GridSearchCV, RandomizedSearchCV, cross_val_score
+from sklearn.model_selection import GridSearchCV, RandomizedSearchCV, cross_validate
 from sklearn.pipeline import Pipeline
 import pickle
 
@@ -44,9 +44,11 @@ if __name__ == '__main__':
             cv_results = pd.DataFrame(pipeline['param_tuner'].cv_results_)
 
             if TRAIN_WITH_NCV:
-                scores = cross_val_score(pipeline, X_train, y_train, scoring=TRAIN_SCORING_METRIC, cv=TRAIN_OUTER_CV)
-                avg_score = scores.mean()
-                ncv_results = pd.DataFrame({'fold':list(range(TRAIN_OUTER_CV))+['avg'], 'score':list(scores)+[avg_score]}).set_index('fold')
+                scores = cross_validate(pipeline, X_train, y_train, scoring=NCV_SCORING_METRICS, cv=TRAIN_OUTER_CV)
+                ncv_results_dict = {'fold':list(range(TRAIN_OUTER_CV))+['avg']}
+                for score in scores:
+                    ncv_results_dict[score] = list(scores[score]) + [scores[score].mean()]
+                ncv_results = pd.DataFrame(ncv_results_dict).set_index('fold')
 
             if TRAIN_WITH_FEATURE_SELECTION:
                 fs_results.to_excel(writer, sheet_name=model['name']+'_fs_results')

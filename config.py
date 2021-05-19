@@ -149,7 +149,7 @@ TRAIN_WITH_FEATURE_SELECTION_EARLY_STOP = True
 A boolean indicating whether nested cross validation is included in 03_train_model
 If set to True, nested cross validation will be used, and a sheet containing nested cross validation test scores will be included in the result file. If set to False, nested cross validation will be skipped
 """
-TRAIN_WITH_NCV = False
+TRAIN_WITH_NCV = True
 
 
 """
@@ -223,7 +223,7 @@ TRAIN_MODELS = [
             'n_estimators': [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
         },
         'search_method': 'randomized_search',
-        'randomized_search_n_iter': 100,
+        'randomized_search_n_iter': 10,
         'final_model_object_filename': 'objects/random_forest.pickle'
     },
     {
@@ -280,6 +280,11 @@ Scoring metric used for hyperparameter tuning and nested cross validation test s
 Select one from https://scikit-learn.org/stable/modules/model_evaluation.html#scoring-parameter
 """
 TRAIN_SCORING_METRIC = 'roc_auc'
+
+
+"""
+"""
+NCV_SCORING_METRICS = ['roc_auc', 'accuracy', 'balanced_accuracy', 'precision', 'recall', 'f1']
 
 
 """
