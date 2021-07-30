@@ -24,5 +24,4 @@ if __name__ == '__main__':
             scores = [metric(y_test, y_pred) for metric in TEST_SCORING_METRICS]
             avg_score = sum(scores) / len(scores)
             evaluation_result = pd.DataFrame({'metric':metric_names+['avg'], 'score':scores+[avg_score]}).set_index('metric')
-            prediction_result.to_excel(writer, sheet_name=model['name']+'_prediction_result')
-            evaluation_result.to_excel(writer, sheet_name=model['name']+'_evaluation_result')
+            evaluation_result.to_excel(writer, sheet_name=model['name'])

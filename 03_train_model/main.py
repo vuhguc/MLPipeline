@@ -4,25 +4,29 @@ cur_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.chdir(cur_dir)
 sys.path.append(cur_dir)
 
-from config import PREPROCESS_RESULT_FILENAME, ID_COLUMN_NAME, TRAIN_MODELS, TRAIN_SCORING_METRIC, NCV_SCORING_METRICS, TRAIN_INNER_CV, TRAIN_WITH_FEATURE_SELECTION, TRAIN_WITH_FEATURE_SELECTION_EARLY_STOP, TRAIN_WITH_NCV, TRAIN_OUTER_CV, TRAIN_RESULT_FILENAME
-from utils.feature_selection import ForwardFeatureSelector
+from config import TRAIN_FILENAME, ID_COLUMN_NAME, PREPROCESSOR_OBJECT_FILENAME, TRAIN_MODELS, TRAIN_SCORING_METRIC, NCV_SCORING_METRICS, TRAIN_INNER_CV, TRAIN_WITH_FEATURE_SELECTION, TRAIN_WITH_FEATURE_SELECTION_EARLY_STOP, TRAIN_WITH_NCV, TRAIN_OUTER_CV, TRAIN_RESULT_FILENAME
+from ml_utils.feature_selection import ForwardFeatureSelector
 
 import pandas as pd
 from sklearn.base import clone
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV, cross_validate
 from sklearn.pipeline import Pipeline
 import pickle
+import time
 
 if __name__ == '__main__':
-    X_train = pd.read_excel(PREPROCESS_RESULT_FILENAME, sheet_name='X_train', engine='openpyxl').set_index(ID_COLUMN_NAME)
-    y_train = pd.read_excel(PREPROCESS_RESULT_FILENAME, sheet_name='y_train', engine='openpyxl').set_index(ID_COLUMN_NAME).iloc[:, 0]
+    start = time.time()
+    df_train = pd.read_csv(TRAIN_FILENAME).set_index(ID_COLUMN_NAME)
+    with open(PREPROCESSOR_OBJECT_FILENAME, 'rb') as object_file:
+        preprocessor = pickle.load(object_file)
+    X_train, y_train = preprocessor.transform(df_train)
     with pd.ExcelWriter(TRAIN_RESULT_FILENAME) as writer:
         for model in TRAIN_MODELS:
 
             if model['search_method'] == 'grid_search':
-                param_tuner = GridSearchCV(model['model'](), param_grid=model['param_grid'], scoring=TRAIN_SCORING_METRIC, cv=TRAIN_INNER_CV, n_jobs=-1)
+                param_tuner = GridSearchCV(model['model'](), param_grid=model['param_grid'], scoring=NCV_SCORING_METRICS, refit=TRAIN_SCORING_METRIC, cv=TRAIN_INNER_CV, n_jobs=1)
             elif model['search_method'] == 'randomized_search':
-                param_tuner = RandomizedSearchCV(model['model'](), param_distributions=model['param_grid'], n_iter=model['randomized_search_n_iter'], scoring=TRAIN_SCORING_METRIC, cv=TRAIN_INNER_CV, n_jobs=-1)
+                param_tuner = RandomizedSearchCV(model['model'](), param_distributions=model['param_grid'], n_iter=model['randomized_search_n_iter'], scoring=NCV_SCORING_METRICS, refit=TRAIN_SCORING_METRIC, cv=TRAIN_INNER_CV, n_jobs=1, random_state=0)
             else:
                 raise Exception('Unknown parameter tuning search method {}.'.format(model['search_method']))
 
@@ -58,3 +62,5 @@ if __name__ == '__main__':
 
             with open(model['final_model_object_filename'], 'wb') as object_file:
                 pickle.dump(pipeline, object_file)
+    end = time.time()
+    print(end - start)

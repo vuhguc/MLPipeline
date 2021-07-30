@@ -1,4 +1,6 @@
 __pycache__/
 data/
+!data/README.md
 objects/
+!objects/README.md
 nohup.out

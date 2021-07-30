@@ -30,8 +30,9 @@ SPLIT_TEST_SIZE = 0
 """
 Random state for 01_split_data
 Set to an int for reproducible output or None for different output every run
+Ignored if SPLIT_TEST_SIZE is set to 0
 """
-SPLIT_RANDOM_STATE = 5
+SPLIT_RANDOM_STATE = 0
 
 
 """
@@ -49,49 +50,19 @@ data_type is a string describing feature data type, can be one of the following:
     'categorical': categorical feature, will be one-hot encoded
 """
 X_COLUMNS = [
-    ('diagnosis', 'categorical'),
-    ('gender', 'categorical'),
-    ('race', 'categorical'),
-    ('gestational_age_wks', 'numerical'),
-    ('birth_weight_g', 'numerical'),
-    ('event_wt_kg', 'numerical'),
-    ('event_age_days', 'numerical'),
-    ('vent2', 'categorical'),
-    ('sildenafil', 'categorical'),
-    ('sildenafil_dose_per_kg', 'numerical'),
-    ('pip', 'numerical'),
-    ('peep', 'numerical'),
-    ('vte_avg', 'numerical'),
-    ('vte_std', 'numerical'),
-    ('trigger_type', 'categorical'),
-    ('trigger_sensitivity', 'categorical'),
-    ('compliance', 'numerical'),
-    ('fio2_avg', 'numerical'),
-    ('suction_freq_per_24hr', 'numerical'),
-    ('hr_avg_24', 'numerical'),
-    ('hr_std_24', 'numerical'),
-    ('hr_avg_48', 'numerical'),
-    ('hr_std_48', 'numerical'),
-    ('hr_avg_72', 'numerical'),
-    ('hr_std_72', 'numerical'),
-    ('hr_avg_96', 'numerical'),
-    ('hr_std_96', 'numerical'),
-    ('rr_avg_24', 'numerical'),
-    ('rr_std_24', 'numerical'),
-    ('rr_avg_48', 'numerical'),
-    ('rr_std_48', 'numerical'),
-    ('rr_avg_72', 'numerical'),
-    ('rr_std_72', 'numerical'),
-    ('rr_avg_96', 'numerical'),
-    ('rr_std_96', 'numerical'),
-    ('spo2_avg_24', 'numerical'),
-    ('spo2_std_24', 'numerical'),
-    ('spo2_avg_48', 'numerical'),
-    ('spo2_std_48', 'numerical'),
-    ('spo2_avg_72', 'numerical'),
-    ('spo2_std_72', 'numerical'),
-    ('spo2_avg_96', 'numerical'),
-    ('spo2_std_96', 'numerical')
+    ('age_over_70', 'numerical'),
+    ('insurance_gov', 'numerical'),
+    ('married', 'numerical'),
+    ('operative_admission', 'numerical'),
+    ('history_of_myocardial_infarction', 'numerical'),
+    ('length_of_stay', 'numerical'),
+    ('emergent_admission', 'numerical'),
+    ('number_of_emergency_department_visits_within_past_6_months', 'numerical'),
+    ('elective_vs_urgent_admission', 'categorical'),
+    ('number_of_admissions_during_previous_year', 'numerical'),
+    ('discharge_disposition', 'categorical'),
+    ('number_of_admissions_in_last_6_months', 'numerical'),
+    ('mdc_category_name', 'categorical')
 ]
 
 
@@ -103,14 +74,7 @@ data_type is a string describing output data type, can be one of the following:
     'numerical': numerical output (float)
     'categorical': categorical output, will be label encoded
 """
-Y_COLUMN = ('result', 'categorical')
-
-
-"""
-Preprocessing result xlsx file name (path)
-This file is produced by 02_preprocess_data, containing a sheet describing X_train and a sheet describing y_train
-"""
-PREPROCESS_RESULT_FILENAME = 'data/preprocess_result.xlsx'
+Y_COLUMN = ('unplanned_readmission', 'categorical')
 
 
 """
@@ -130,26 +94,31 @@ PREPROCESS_WITH_SCALE = True
 
 """
 Train result xlsx file name (path)
-This file is produced by 03_train_model, containing a sheet describing hyperparameter tuning result on the training set and a sheet descring nested cross validation score on the training set (only if TRAIN_WITH_NCV is set to True)
+This file is produced by 03_train_model, containing a sheet describing hyperparameter tuning result on the training set, a sheet describing feature selection result on the final model (only if TRAIN_WITH_FEATURE_SELECTION is set to True), and a sheet describing nested cross validation score on the training set (only if TRAIN_WITH_NCV is set to True)
 """
 TRAIN_RESULT_FILENAME = 'data/train_result.xlsx'
 
 
 """
+A boolean indicating whether forward feature selection is included in 03_train_model
+If set to True, forward feature selection will be used, and a sheet containing feature selection results (for the final model if nested cross validation is used) will be included in the result file. If set to False, feature selection will be skipped
 """
-TRAIN_WITH_FEATURE_SELECTION = True
+TRAIN_WITH_FEATURE_SELECTION = False
 
 
 """
+A boolean indicating whether early stop is used for forward feature selection
+If set to True, feature selection will stop as soon as the cross validation score drops. If set to False, feature selection will continue until all features are selected
+Ignored if TRAIN_WITH_FEATURE_SELECTION is set to False
 """
-TRAIN_WITH_FEATURE_SELECTION_EARLY_STOP = True
+TRAIN_WITH_FEATURE_SELECTION_EARLY_STOP = False
 
 
 """
 A boolean indicating whether nested cross validation is included in 03_train_model
 If set to True, nested cross validation will be used, and a sheet containing nested cross validation test scores will be included in the result file. If set to False, nested cross validation will be skipped
 """
-TRAIN_WITH_NCV = True
+TRAIN_WITH_NCV = False
 
 
 """
@@ -212,7 +181,7 @@ TRAIN_MODELS = [
     #     'search_method': 'grid_search',
     #     'final_model_object_filename': 'objects/gradient_boosting.pickle'
     # },
-    {
+   {
         'name': 'random_forest',
         'model': RandomForestClassifier,
         'param_grid': {
@@ -259,7 +228,7 @@ TRAIN_MODELS = [
             'dual': [False, True]
         },
         'search_method': 'grid_search',
-        'final_model_object_filename': 'objects/svm.pickle'
+        'final_model_object_filename': 'objects/linear_svm.pickle'
     },
     {
         'name': 'decision_tree',
@@ -270,7 +239,7 @@ TRAIN_MODELS = [
             'min_samples_split': [2, 5, 10],
         },
         'search_method': 'grid_search',
-        'final_model_object_filename': 'objects/decision_tree_classifier.pickle'
+        'final_model_object_filename': 'objects/decision_tree.pickle'
     }
 ]
 
@@ -283,16 +252,22 @@ TRAIN_SCORING_METRIC = 'roc_auc'
 
 
 """
+Scoring metrics used for nested cross validation results
+Select from https://scikit-learn.org/stable/modules/model_evaluation.html#scoring-parameter
 """
 NCV_SCORING_METRICS = ['roc_auc', 'accuracy', 'balanced_accuracy', 'precision', 'recall', 'f1']
 
 
 """
+Test result xlsx filename
+This file is produced by 04_test_model, containing test scores on the testing set
 """
 TEST_RESULT_FILENAME = 'data/test_result.xlsx'
 
 
 """
+Scoring metrics used for test results
+Select from sklearn.metrics
 """
-from sklearn.metrics import accuracy_score, balanced_accuracy_score, precision_score, recall_score, roc_auc_score
-TEST_SCORING_METRICS = [accuracy_score, balanced_accuracy_score, precision_score, recall_score, roc_auc_score]
+from sklearn.metrics import accuracy_score, balanced_accuracy_score, precision_score, recall_score, f1_score
+TEST_SCORING_METRICS = [accuracy_score, balanced_accuracy_score, precision_score, recall_score, f1_score]
