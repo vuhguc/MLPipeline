@@ -57,6 +57,7 @@ class Preprocessor:
 
     def transform(self, df):
         X = df[self.X_numerical_column_names].astype(float).fillna(0)
+        y = None
         if len(self.X_categorical_column_names) > 0:
             X_encoded = self.X_categorical_encoder.transform(df[self.X_categorical_column_names].astype(str)).astype(float)
             encoded_column_names = self.X_categorical_encoder.get_feature_names(self.X_categorical_column_names)
